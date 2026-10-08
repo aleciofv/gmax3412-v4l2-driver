@@ -1,91 +1,93 @@
-# Minimum Driver for GMAX3412
+# Driver Mínimo para GMAX3412
 
-GMAX3412 requires external triger to generate the frame, such that it can't really drive itself like most of the MIPI camera sensors, as such the driver here is missing critical V4L2 controls like V4L2_CID_VBLANK, V4L2_CID_HBLANK and V4L2_CID_EXPOSURE and the expect is that the users will generate the pulses externally via other means.  
-The way this driver currently setup is with external exposure, which means exposure and framerate is determined by a external pulse frequency and the level high duration, and the driver won't do anything about the controls for V4L2_CID_VBLANK, V4L2_CID_HBLANK and V4L2_CID_EXPOSURE. 
-It will still expose them to the upper layer because some applications (rpicam and libcaemra) requires these minimum controls.  
-  
-The driver requires 4-lane MIPI, as I did not see a way to use 2 or 1 lane from the leaked(?) datasheet.
-Additionally it only supports 12bit 4K (4096x3072) mode, if anyone has a more up to date version of the datasheet, feel free to open an issue and send the datasheet.  
+O GMAX3412 requer um gatilho externo para gerar o quadro, portanto ele não consegue operar por conta própria como a maioria dos sensores de câmera MIPI. Como resultado, este driver está sem controles críticos do V4L2, como `V4L2_CID_VBLANK`, `V4L2_CID_HBLANK` e `V4L2_CID_EXPOSURE`. A expectativa é que os usuários gerem os pulsos externamente por outros meios.
 
-Overall this is a extension from my gmax4002 basic minimum driver - just modified for gmax3412.  
+A forma como este driver está configurado atualmente é com exposição externa, o que significa que a exposição e a taxa de quadros são determinadas pela frequência de um pulso externo e pela duração do nível alto. O driver não faz nada com os controles `V4L2_CID_VBLANK`, `V4L2_CID_HBLANK` e `V4L2_CID_EXPOSURE`.
 
-## Working platform
-The code is tested with RPI5 with either Analog discovery 2 or MCU as pulse generator, see the camera board repo [here](https://github.com/will127534/GlobalEye) for MCU code and camera board. The libcamera support has been added to my libcamera fork [here](https://github.com/will127534/libcamera).  
+Mesmo assim, ele continua expondo esses controles para a camada superior porque alguns aplicativos (como `rpicam` e `libcamera`) exigem esses controles mínimos.
+
+O driver exige MIPI de 4 vias, pois não vi uma forma de usar 2 ou 1 via a partir do datasheet vazado (ou "leaked").
+Além disso, ele suporta apenas o modo 12-bit 4K (4096x3072). Se alguém tiver uma versão mais atualizada do datasheet, sinta-se à vontade para abrir uma issue e enviar o arquivo.
+
+No geral, isso é uma extensão do meu driver mínimo básico para `gmax4002`, apenas adaptado para o `gmax3412`.
+
+## Plataforma de trabalho
+O código foi testado no Raspberry Pi 5 com o Analog Discovery 2 ou um MCU como gerador de pulsos. Consulte o repositório da placa da câmera [aqui](https://github.com/will127534/GlobalEye) para obter o código do MCU e detalhes da placa. O suporte à libcamera foi adicionado ao meu fork da libcamera [aqui](https://github.com/will127534/libcamera).
 
 <img width="1280" alt="image" src="https://github.com/user-attachments/assets/53eb4a42-8ea5-4f12-b764-6d9b37767cd4" />
 <img width="1280" alt="image" src="https://github.com/user-attachments/assets/5b95bd54-53f1-42e3-ba69-38ca70e62af9" />
 
-See it in action here: [Youtube](https://www.youtube.com/watch?v=J_Mvx6Y6Drg).  
-The board is tested with Raspberry Pi 5.  
+Veja em ação aqui: [YouTube](https://www.youtube.com/watch?v=J_Mvx6Y6Drg).
+A placa foi testada com Raspberry Pi 5.
 
-The trigger signal looks like this:  
+O sinal de trigger se parece com isto:
 <img width="1280" alt="image" src="https://github.com/user-attachments/assets/56f11915-6237-4873-89a1-e6653319db5b" />
-Yellow is the TEXP, and blue one is the TDIG output from the sensor showing "Frame Overhead Time".
+Amarelo é o TEXP, e o azul é a saída TDIG do sensor mostrando o "Frame Overhead Time".
 
+## Pré-requisitos
 
-## Prerequisites
+Antes de iniciar o processo de instalação, certifique-se de que os seguintes pré-requisitos sejam atendidos:
 
-Before you begin the installation process, please ensure the following prerequisites are met:
+- **Versão do kernel**: você deve estar executando um kernel Linux 6.12 ou superior. Você pode verificar a versão do kernel executando `uname -r` no terminal.
 
-- **Kernel version**: You should be running on a Linux kernel version 6.12 or newer. You can verify your kernel version by executing `uname -r` in your terminal.
+- **Ferramentas de desenvolvimento**: ferramentas essenciais como `gcc`, `dkms` e `linux-headers` são necessárias para compilar um módulo do kernel. Se ainda não estiverem instaladas, elas podem ser instaladas com o gerenciador de pacotes usando o seguinte comando:
 
-- **Development tools**: Essential tools such as `gcc`, `dkms`, and `linux-headers` are required for compiling a kernel module. If not already installed, these can be installed using the package manager with the following command:
-  
-   ```bash 
+   ```bash
    sudo apt install linux-headers dkms git
    ```
-   
-## Installation Steps
 
-### Setting Up the Tools
+## Etapas de instalação
 
-First, install the necessary tools (`linux-headers`, `dkms`, and `git`) if you haven't done so:
+### Configurando as ferramentas
 
-```bash 
+Primeiro, instale as ferramentas necessárias (`linux-headers`, `dkms` e `git`) se ainda não tiver feito isso:
+
+```bash
 sudo apt install linux-headers dkms git
 ```
 
-### Fetching the Source Code
+### Obtendo o código-fonte
 
-Clone the repository to your local machine and navigate to the cloned directory:
+Clone o repositório para sua máquina local e navegue até o diretório clonado:
 
 ```bash
 git clone https://github.com/will127534/gmax3412-v4l2-driver.git
 cd gmax3412-v4l2-driver/
 ```
 
-### Compiling and Installing the Kernel Driver
+### Compilando e instalando o driver do kernel
 
-To compile and install the kernel driver, execute the provided installation script:
+Para compilar e instalar o driver do kernel, execute o script de instalação fornecido:
 
-```bash 
+```bash
 ./setup.sh
 ```
 
-### Updating the Boot Configuration
+### Atualizando a configuração de boot
 
-Edit the boot configuration file using the following command:
+Edite o arquivo de configuração do boot com o seguinte comando:
 
 ```bash
 sudo nano /boot/config.txt
 ```
 
-In the opened editor, locate the line containing `camera_auto_detect` and change its value to `0`. Then, add the line `dtoverlay=gmax3412`. So, it will look like this:
+No editor aberto, localize a linha contendo `camera_auto_detect` e altere seu valor para `0`. Em seguida, adicione a linha `dtoverlay=gmax3412`. Ficará assim:
 
 ```
 camera_auto_detect=0
 dtoverlay=gmax3412
 ```
 
-After making these changes, save the file and exit the editor.
+Depois de fazer essas alterações, salve o arquivo e saia do editor.
 
-Remember to reboot your system for the changes to take effect.
+Lembre-se de reiniciar o sistema para que as alterações entrem em vigor.
 
-## dtoverlay options
+## Opções do dtoverlay
 
 ### cam0
 
-If the camera is attached to cam0 port, append the dtoverlay with `,cam0` like this:  
+Se a câmera estiver conectada na porta `cam0`, acrescente o `dtoverlay` com `,cam0`, assim:
+
 ```
 camera_auto_detect=0
 dtoverlay=gmax3412,cam0
@@ -93,7 +95,8 @@ dtoverlay=gmax3412,cam0
 
 ### always-on
 
-If you want to keep the camera power always on (Useful for debugging HW issues, specifically this will set CAM_GPIO to high constantly), append the dtoverlay with `,always-on` like this:  
+Se você quiser manter a energia da câmera sempre ligada (útil para depuração de problemas de hardware; especificamente, isso define `CAM_GPIO` como alto o tempo todo), acrescente o `dtoverlay` com `,always-on`, assim:
+
 ```
 camera_auto_detect=0
 dtoverlay=gmax3412,always-on
